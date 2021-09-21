@@ -1,6 +1,6 @@
-import { supabase } from '../lib/supabaseInit'
-import { Auth } from '@supabase/ui'
-import ProjectList from '../components/ProjectList'
+import { supabase } from "../lib/supabaseInit";
+import { Auth } from "@supabase/ui";
+import ProjectList from "../components/ProjectList";
 
 export default function Home() {
   const { user } = Auth.useUser();
@@ -17,9 +17,7 @@ export default function Home() {
           />
         </div>
       ) : (
-        <div
-          className="flex flex-col items-center justify-start w-full h-full p-4"
-        >
+        <div className="flex flex-col items-center justify-start w-full h-full p-4">
           <ProjectList user={supabase.auth.user()} />
           <button
             className="w-full mt-12 btn-black"
