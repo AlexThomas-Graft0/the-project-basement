@@ -11,7 +11,7 @@ export default function Home() {
         <div className="flex items-center justify-center w-full h-full p-4">
           <Auth
             supabaseClient={supabase}
-            providers={["google", "github"]}
+            providers={["twitter", "github"]}
             socialLayout="horizontal"
             socialButtonSize="xlarge"
           />

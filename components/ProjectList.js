@@ -84,70 +84,172 @@ export default function Projets({ user }) {
 
 const Project = ({ project, onDelete }) => {
   const [isCompleted, setIsCompleted] = useState(project.is_complete);
+  //set name, description, githubUrl, completion inputs
+  const [name, setName] = useState(project.project);
+  const [description, setDescription] = useState(project.description);
+  const [githubUrl, setGithubUrl] = useState(project.github_url);
+  const [completion, setCompletion] = useState(project.completion);
+  const [errorText, setError] = useState("");
 
-  const toggle = async () => {
-    try {
-      const { data, error } = await supabase
-        .from("projects")
-        .update({ is_complete: !isCompleted })
-        .eq("id", project.id)
-        .single();
-
-      if (error) {
-        throw new Error(error);
-      }
-      setIsCompleted(data.is_complete);
-    } catch (error) {
-      console.log("error", error);
+  const updateProject = async () => {
+    let { data: project, error } = await supabase
+      .from("projects")
+      .update({
+        project: name,
+        description: description,
+        github_url: githubUrl,
+        completion: completion,
+        is_complete: isCompleted,
+      })
+      .eq("id", project.id)
+      .single();
+    if (error) console.log("error", error);
+    else {
+      project.is_complete = isCompleted;
+      setProjects(projects.map((x) => (x.id == project.id ? project : x)));
     }
   };
 
   return (
-    <li
-      onClick={(e) => {
-        e.preventDefault();
-        toggle();
-      }}
-      className="block w-full transition duration-150 ease-in-out cursor-pointer hover:bg-gray-200 focus:outline-none focus:bg-gray-200"
-    >
-      <div className="flex items-center px-4 py-4 sm:px-6">
-        <div className="flex items-center flex-1 min-w-0">
-          <div className="text-sm font-medium leading-5 truncate">
-            {project.project}
-          </div>
-        </div>
-        <div>
+    <li className="flex flex-col p-2">
+      <div className="flex flex-row justify-between">
+        <div className="flex flex-col">
           <input
-            className="cursor-pointer"
-            onChange={(e) => toggle()}
-            type="checkbox"
-            checked={isCompleted ? true : ""}
+            className="w-full p-2 rounded"
+            type="text"
+            placeholder="Project Name"
+            value={name}
+            onChange={(e) => {
+              setError("");
+              setName(e.target.value);
+            }}
+          />
+          <input
+            className="w-full p-2 rounded"
+            type="text"
+            placeholder="Description"
+            value={description}
+            onChange={(e) => {
+              setError("");
+              setDescription(e.target.value);
+            }}
+          />
+          <input
+            className="w-full p-2 rounded"
+            type="text"
+            placeholder="Github Url"
+            value={githubUrl}
+            onChange={(e) => {
+              setError("");
+              setGithubUrl(e.target.value);
+            }}
+          />
+          <input
+            className="w-full p-2 rounded"
+            type="text"
+            placeholder="Completion"
+            value={completion}
+            onChange={(e) => {
+              setError("");
+              setCompletion(e.target.value);
+            }}
           />
         </div>
+        <div className="flex flex-col">
+          <input
+            className="w-full p-2 rounded"
+            type="checkbox"
+            checked={isCompleted}
+            onChange={() => setIsCompleted(!isCompleted)}
+          />
+        </div>
+      </div>
+      <div className="flex flex-row justify-end">
         <button
-          onClick={(e) => {
-            e.preventDefault();
-            e.stopPropagation();
+          className="mr-2 btn-black"
+          onClick={() => {
+            updateProject();
+          }}
+        >
+          Update
+        </button>
+        <button
+          className="btn-black"
+          onClick={() => {
             onDelete();
           }}
-          className="w-4 h-4 ml-2 border-2 rounded hover:border-black"
         >
-          <svg
-            xmlns="http://www.w3.org/2000/svg"
-            viewBox="0 0 20 20"
-            fill="gray"
-          >
-            <path
-              fillRule="evenodd"
-              d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z"
-              clipRule="evenodd"
-            />
-          </svg>
+          Delete
         </button>
       </div>
+      <span className="text-red-500">{errorText}</span>
     </li>
   );
 };
+
+//   const toggle = async () => {
+//     try {
+//       const { data, error } = await supabase
+//         .from("projects")
+//         .update({ is_complete: !isCompleted })
+//         .eq("id", project.id)
+//         .single();
+
+//       if (error) {
+//         throw new Error(error);
+//       }
+//       setIsCompleted(data.is_complete);
+//     } catch (error) {
+//       console.log("error", error);
+//     }
+//   };
+
+//   return (
+//     <li
+//       onClick={(e) => {
+//         e.preventDefault();
+//         toggle();
+//       }}
+//       className="block w-full transition duration-150 ease-in-out cursor-pointer hover:bg-gray-200 focus:outline-none focus:bg-gray-200"
+//     >
+//       <div className="flex items-center px-4 py-4 sm:px-6">
+//         <div className="flex items-center flex-1 min-w-0">
+//           <div className="text-sm font-medium leading-5 truncate">
+//             {project.project}
+//           </div>
+//         </div>
+//         <div>
+//           <input
+//             className="cursor-pointer"
+//             onChange={(e) => toggle()}
+//             type="checkbox"
+//             checked={isCompleted ? true : ""}
+//           />
+//         </div>
+//         <button
+//           onClick={(e) => {
+//             e.preventDefault();
+//             e.stopPropagation();
+//             onDelete();
+//           }}
+//           className="w-4 h-4 ml-2 border-2 rounded hover:border-black"
+//         >
+//           <svg
+//             xmlns="http://www.w3.org/2000/svg"
+//             viewBox="0 0 20 20"
+//             fill="gray"
+//           >
+//             <path
+//               fillRule="evenodd"
+//               d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z"
+//               clipRule="evenodd"
+//             />
+//           </svg>
+//         </button>
+//       </div>
+//     </li>
+//   );
+// };
 
 const Alert = ({ text }) => (
   <div className="p-4 my-3 bg-red-100 rounded-md">
