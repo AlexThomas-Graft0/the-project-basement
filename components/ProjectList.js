@@ -87,7 +87,7 @@ export default function Projects({ user }) {
 }
 
 const Project = ({ project, onDelete }) => {
-  const [isPublic, setisPublic] = useState(project.is_public);
+  const [isPublic, setIsPublic] = useState(project.is_public);
   const [projectId, setProjectId] = useState(project.id);
   //set name, description, githubUrl, completion inputs
   const [name, setName] = useState(project.project);
@@ -116,6 +116,23 @@ const Project = ({ project, onDelete }) => {
       } else {
         setMessage("Successfully updated project");
       }
+    }
+  };
+
+  const toggle = async () => {
+    try {
+      const { data, error } = await supabase
+        .from("projects")
+        .update({ is_public: !isPublic })
+        .eq("id", projectId)
+        .single();
+
+      if (error) {
+        throw new Error(error);
+      }
+      setIsPublic(data.is_public);
+    } catch (error) {
+      console.log("error", error);
     }
   };
 
@@ -173,23 +190,35 @@ const Project = ({ project, onDelete }) => {
           />
         </div>
       </div>
-      <div className="flex flex-row justify-end">
-        <button
-          className="mr-2 btn-black"
-          onClick={() => {
-            updateProject();
-          }}
-        >
-          Update
-        </button>
-        <button
-          className="btn-black"
-          onClick={() => {
-            onDelete();
-          }}
-        >
-          Delete
-        </button>
+      <div className="flex flex-row items-center justify-between">
+        <label htmlFor="public" onClick={(e) => toggle()} className="cursor-pointer select-none">
+          <input
+            name="public"
+            className="mr-2 cursor-pointer"
+            onChange={(e) => toggle()}
+            type="checkbox"
+            checked={isPublic ? true : ""}
+          />
+          Public
+        </label>
+        <div>
+          <button
+            className="mr-2 btn-black"
+            onClick={() => {
+              updateProject();
+            }}
+          >
+            Update
+          </button>
+          <button
+            className="btn-black"
+            onClick={() => {
+              onDelete();
+            }}
+          >
+            Delete
+          </button>
+        </div>
       </div>
       {!!messageText && <Success text={messageText} setMessage={setMessage} />}
       <span className="text-red-500">{errorText}</span>
@@ -217,14 +246,6 @@ const Icon = ({ icon, color, path }) => {
     </svg>
   );
 };
-
-{
-  /* <Icon
-  icon="check"
-  color="white"
-  path={`M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm5 11h-4v4h-2v-4H7v-2h4V7h2v4h4v2z`}
-/> */
-}
 
 const Success = ({ text, setMessage }) => (
   <div className="flex justify-between p-4 my-3 bg-green-100 rounded-md">

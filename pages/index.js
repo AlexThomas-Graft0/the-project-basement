@@ -19,7 +19,6 @@ export default function Home() {
       ) : (
         <div
           className="flex flex-col items-center justify-start w-full h-full p-4"
-          // style={{ minWidth: 250, maxWidth: 600, margin: "auto" }}
         >
           <ProjectList user={supabase.auth.user()} />
           <button
