@@ -1,14 +1,11 @@
 import { useState, useEffect } from "react";
 import { supabase } from "../lib/supabaseInit";
 
-export default function Projets({ user }) {
+export default function Projects({ user }) {
   const [projects, setProjects] = useState([]);
   const [newProjectText, setNewProjectText] = useState("");
   const [errorText, setError] = useState("");
-
-  useEffect(() => {
-    fetchProjects();
-  }, []);
+  const [messageText, setMessage] = useState("");
 
   const fetchProjects = async () => {
     let { data: projects, error } = await supabase
@@ -19,40 +16,47 @@ export default function Projets({ user }) {
     else setProjects(projects);
   };
 
+  useEffect(async () => {
+    await fetchProjects();
+  }, []);
+
   const addProject = async (projectText) => {
     let name = projectText.trim();
-    console.log({ name });
-    console.log({ user });
-    // return;
 
     if (name.length) {
       let { data: project, error } = await supabase
         .from("projects")
         .insert({ project: name, user_id: user.id })
         .single();
-      console.log({ project });
-      if (error) setError(error.message);
-      else setProjects([...projects, project]);
+      if (error) {
+        setError(error.message);
+      } else {
+        setProjects([...projects, project]);
+        setMessage("Successfully added project");
+      }
     }
   };
 
   const deleteProject = async (id) => {
-    try {
-      await supabase.from("projects").delete().eq("id", id);
-      setProjects(projects.filter((x) => x.id != id));
-    } catch (error) {
-      console.log("error", error);
-    }
+    if (confirm("Are you sure you want to delete this project?"))
+      try {
+        await supabase.from("projects").delete().eq("id", id);
+        setProjects(projects.filter((x) => x.id != id));
+        setMessage("Successfully deleted project");
+      } catch (error) {
+        console.log("error", error);
+        handleSetError(error.message);
+      }
   };
 
   return (
-    <div className="w-full">
+    <div className="w-full h-full">
       <h1 className="mb-12">The Project Basement.</h1>
       <div className="flex gap-2 my-2">
         <input
-          className="w-full p-2 rounded"
+          className="w-full p-2"
           type="text"
-          placeholder="Not another fucking todo app..."
+          placeholder="Not another fucking project..."
           value={newProjectText}
           onChange={(e) => {
             setError("");
@@ -66,14 +70,16 @@ export default function Projets({ user }) {
           Add
         </button>
       </div>
+      {!!messageText && <Success text={messageText} setMessage={setMessage} />}
       {!!errorText && <Alert text={errorText} />}
-      <div className="overflow-hidden bg-white rounded-md shadow">
-        <ul>
+      <div className="overflow-hidden rounded-md">
+        <ul className="flex flex-wrap items-center px-1 py-3 justify-evenly md:space-x-1">
           {projects.map((project) => (
             <Project
               key={project.id}
               project={project}
               onDelete={() => deleteProject(project.id)}
+              fetchProjects={fetchProjects}
             />
           ))}
         </ul>
@@ -82,40 +88,46 @@ export default function Projets({ user }) {
   );
 }
 
-const Project = ({ project, onDelete }) => {
-  const [isCompleted, setIsCompleted] = useState(project.is_complete);
+const Project = ({ project, onDelete, fetchProjects }) => {
+  const [isPublic, setisPublic] = useState(project.is_public);
+  const [projectId, setProjectId] = useState(project.id);
   //set name, description, githubUrl, completion inputs
   const [name, setName] = useState(project.project);
   const [description, setDescription] = useState(project.description);
   const [githubUrl, setGithubUrl] = useState(project.github_url);
   const [completion, setCompletion] = useState(project.completion);
   const [errorText, setError] = useState("");
+  const [messageText, setMessage] = useState("");
 
   const updateProject = async () => {
-    let { data: project, error } = await supabase
-      .from("projects")
-      .update({
-        project: name,
-        description: description,
-        github_url: githubUrl,
-        completion: completion,
-        is_complete: isCompleted,
-      })
-      .eq("id", project.id)
-      .single();
-    if (error) console.log("error", error);
-    else {
-      project.is_complete = isCompleted;
-      setProjects(projects.map((x) => (x.id == project.id ? project : x)));
+    if (confirm("Are you sure you want to update this project?")) {
+      let { data: project, error } = await supabase
+        .from("projects")
+        .update({
+          project: name,
+          description: description,
+          github_url: githubUrl,
+          completion: completion,
+          is_public: isPublic,
+        })
+        .eq("id", projectId)
+        .single();
+      if (error) {
+        console.log("error", error);
+        setError(error.message);
+      } else {
+        setMessage("Successfully updated project");
+        fetchProjects();
+      }
     }
   };
 
   return (
-    <li className="flex flex-col p-2">
-      <div className="flex flex-row justify-between">
-        <div className="flex flex-col">
+    <li className="flex flex-col w-full p-2 my-3 bg-gray-200 shadow md:w-1/3">
+      <div className="flex flex-row justify-between mb-2">
+        <div className="flex flex-col w-full">
           <input
-            className="w-full p-2 rounded"
+            className="w-full p-2"
             type="text"
             placeholder="Project Name"
             value={name}
@@ -125,7 +137,7 @@ const Project = ({ project, onDelete }) => {
             }}
           />
           <input
-            className="w-full p-2 rounded"
+            className="w-full p-2"
             type="text"
             placeholder="Description"
             value={description}
@@ -135,7 +147,7 @@ const Project = ({ project, onDelete }) => {
             }}
           />
           <input
-            className="w-full p-2 rounded"
+            className="w-full p-2"
             type="text"
             placeholder="Github Url"
             value={githubUrl}
@@ -145,7 +157,7 @@ const Project = ({ project, onDelete }) => {
             }}
           />
           <input
-            className="w-full p-2 rounded"
+            className="w-full p-2"
             type="text"
             placeholder="Completion"
             value={completion}
@@ -157,10 +169,10 @@ const Project = ({ project, onDelete }) => {
         </div>
         <div className="flex flex-col">
           <input
-            className="w-full p-2 rounded"
+            className="w-full p-2"
             type="checkbox"
-            checked={isCompleted}
-            onChange={() => setIsCompleted(!isCompleted)}
+            checked={isPublic}
+            onChange={() => setisPublic(!isPublic)}
           />
         </div>
       </div>
@@ -182,77 +194,59 @@ const Project = ({ project, onDelete }) => {
           Delete
         </button>
       </div>
+      {!!messageText && <Success text={messageText} setMessage={setMessage} />}
       <span className="text-red-500">{errorText}</span>
     </li>
   );
 };
 
-//   const toggle = async () => {
-//     try {
-//       const { data, error } = await supabase
-//         .from("projects")
-//         .update({ is_complete: !isCompleted })
-//         .eq("id", project.id)
-//         .single();
-
-//       if (error) {
-//         throw new Error(error);
-//       }
-//       setIsCompleted(data.is_complete);
-//     } catch (error) {
-//       console.log("error", error);
-//     }
-//   };
-
-//   return (
-//     <li
-//       onClick={(e) => {
-//         e.preventDefault();
-//         toggle();
-//       }}
-//       className="block w-full transition duration-150 ease-in-out cursor-pointer hover:bg-gray-200 focus:outline-none focus:bg-gray-200"
-//     >
-//       <div className="flex items-center px-4 py-4 sm:px-6">
-//         <div className="flex items-center flex-1 min-w-0">
-//           <div className="text-sm font-medium leading-5 truncate">
-//             {project.project}
-//           </div>
-//         </div>
-//         <div>
-//           <input
-//             className="cursor-pointer"
-//             onChange={(e) => toggle()}
-//             type="checkbox"
-//             checked={isCompleted ? true : ""}
-//           />
-//         </div>
-//         <button
-//           onClick={(e) => {
-//             e.preventDefault();
-//             e.stopPropagation();
-//             onDelete();
-//           }}
-//           className="w-4 h-4 ml-2 border-2 rounded hover:border-black"
-//         >
-//           <svg
-//             xmlns="http://www.w3.org/2000/svg"
-//             viewBox="0 0 20 20"
-//             fill="gray"
-//           >
-//             <path
-//               fillRule="evenodd"
-//               d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z"
-//               clipRule="evenodd"
-//             />
-//           </svg>
-//         </button>
-//       </div>
-//     </li>
-//   );
-// };
-
 const Alert = ({ text }) => (
   <div className="p-4 my-3 bg-red-100 rounded-md">
     <div className="text-sm leading-5 text-red-700">{text}</div>
+  </div>
+);
+
+const Icon = ({ icon, color, path }) => {
+  return (
+    <svg
+      className="icon"
+      xmlns="http://www.w3.org/2000/svg"
+      viewBox="0 0 24 24"
+      width="24"
+      height="24"
+    >
+      <title>{icon}</title>
+      <path fill={color} d={path} stroke="none" fillRule="evenodd" />
+    </svg>
+  );
+};
+
+{
+  /* <Icon
+  icon="check"
+  color="white"
+  path={`M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm5 11h-4v4h-2v-4H7v-2h4V7h2v4h4v2z`}
+/> */
+}
+
+const Success = ({ text, setMessage }) => (
+  <div className="flex justify-between p-4 my-3 bg-green-100 rounded-md">
+    <div className="text-sm leading-5 text-green-700">{text}</div>
+    <div className="rounded-full cursor-pointer" onClick={() => setMessage("")}>
+      <svg
+        xmlns="http://www.w3.org/2000/svg"
+        class="h-6 w-6"
+        fill="none"
+        viewBox="0 0 24 24"
+        stroke="currentColor"
+      >
+        <path
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          strokeWidth="2"
+          d="M6 18L18 6M6 6l12 12"
+        />
+      </svg>
+    </div>
   </div>
 );

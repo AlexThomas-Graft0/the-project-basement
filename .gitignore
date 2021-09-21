@@ -33,3 +33,4 @@ yarn-error.log*
 # vercel
 .vercel
 twitter keys.txt
+old.js
