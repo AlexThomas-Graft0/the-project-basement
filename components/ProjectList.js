@@ -7,17 +7,16 @@ export default function Projects({ user }) {
   const [errorText, setError] = useState("");
   const [messageText, setMessage] = useState("");
 
-  const fetchProjects = async () => {
-    let { data: projects, error } = await supabase
-      .from("projects")
-      .select("*")
-      .order("id", true);
-    if (error) console.log("error", error);
-    else setProjects(projects);
-  };
-
-  useEffect(async () => {
-    await fetchProjects();
+  useEffect(() => {
+    const fetchProjects = async () => {
+      let { data: projects, error } = await supabase
+        .from("projects")
+        .select("*")
+        .order("id", true);
+      if (error) console.log("error", error);
+      else setProjects(projects);
+    };
+    fetchProjects();
   }, []);
 
   const addProject = async (projectText) => {
@@ -235,7 +234,7 @@ const Success = ({ text, setMessage }) => (
     <div className="rounded-full cursor-pointer" onClick={() => setMessage("")}>
       <svg
         xmlns="http://www.w3.org/2000/svg"
-        class="h-6 w-6"
+        className="w-6 h-6"
         fill="none"
         viewBox="0 0 24 24"
         stroke="currentColor"
