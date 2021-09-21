@@ -17,7 +17,7 @@ export default function Projects({ user }) {
       else setProjects(projects);
     };
     fetchProjects();
-  }, []);
+  }, [projects]);
 
   const addProject = async (projectText) => {
     let name = projectText.trim();
@@ -78,7 +78,6 @@ export default function Projects({ user }) {
               key={project.id}
               project={project}
               onDelete={() => deleteProject(project.id)}
-              fetchProjects={fetchProjects}
             />
           ))}
         </ul>
@@ -87,7 +86,7 @@ export default function Projects({ user }) {
   );
 }
 
-const Project = ({ project, onDelete, fetchProjects }) => {
+const Project = ({ project, onDelete }) => {
   const [isPublic, setisPublic] = useState(project.is_public);
   const [projectId, setProjectId] = useState(project.id);
   //set name, description, githubUrl, completion inputs
@@ -116,7 +115,6 @@ const Project = ({ project, onDelete, fetchProjects }) => {
         setError(error.message);
       } else {
         setMessage("Successfully updated project");
-        fetchProjects();
       }
     }
   };
